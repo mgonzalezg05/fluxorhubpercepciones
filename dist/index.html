@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Percepciones iva GM</title>
+  <link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Percepciones iva</title>
+  <link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Hub de Conciliación de Percepciones</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+
+<div class="app-container">
+    <nav id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-title">FluxorHub</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="menu-item" data-tool="reconciler">
+                <a><i class="fa-solid fa-balance-scale"></i><span>Conciliador General</span></a>
+            </li>
+            <li class="menu-item" data-tool="provider-analysis">
+                <a><i class="fa-solid fa-user-tag"></i><span>Análisis por Proveedor</span></a>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="theme-switcher">
+              <i class="fa-solid fa-sun"></i>
+              <label class="switch">
+                <input type="checkbox" id="themeToggle">
+                <span class="slider round"></span>
+              </label>
+              <i class="fa-solid fa-moon"></i>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="main-content">
+        <header class="app-header">
+            <div class="header-left">
+                <h2 id="tool-title">Conciliador General</h2>
+            </div>
+            <div class="header-right">
+                <div class="user-profile">
+                    <span>Bienvenido</span>
+                    <img src="https://placehold.co/40x40/2268FF/FFFFFF?text=U" alt="Avatar de usuario">
+                </div>
+            </div>
+        </header>
+
+        <main class="dashboard">
+            <div id="tool-reconciler" class="tool-content">
+                <div class="panel-full-width">
+                    <div class="card" style="position: relative;">
+                        <div id="loader-overlay" class="loader-overlay" style="display: none;"><div class="spinner"></div></div>
+                        <h3><i class="fa-solid fa-balance-scale"></i> Carga de Archivos a Conciliar</h3>
+                        <p class="subtitle">Carga los reportes de ARCA y de tu sistema contable para encontrar las diferencias.</p>
+                        <div class="upload-section two-cols">
+                            <div id="drop-zone-arca" class="file-drop-zone"><input type="file" id="file-input-arca" class="hidden" accept=".xlsx,.csv"><i class="fa-solid fa-file-shield icon-drop"></i><p id="file-name-arca">Arrastra el archivo de <span>Percepciones ARCA (.xlsx)</span></p></div>
+                            <div id="drop-zone-contabilidad" class="file-drop-zone"><input type="file" id="file-input-contabilidad" class="hidden" accept=".xlsx,.csv"><i class="fa-solid fa-book icon-drop"></i><p id="file-name-contabilidad">Arrastra el archivo de <span>Contabilidad (.xlsx)</span></p></div>
+                        </div>
+                        <div id="column-mapping-section" class="column-mapping-section hidden">
+                             <h4><i class="fa-solid fa-columns"></i> Mapeo de Columnas</h4>
+                             <p class="subtitle">Verifica que las columnas sean correctas. Se han preseleccionado automáticamente.</p>
+                             <div class="mapping-controls">
+                                 <div class="mapping-group">
+                                     <label>Archivo ARCA:</label>
+                                     <select id="select-cuit-arca" class="select-mapping" title="Columna con CUIT"></select>
+                                     <select id="select-monto-arca" class="select-mapping" title="Columna con Monto"></select>
+                                 </div>
+                                 <div class="mapping-group">
+                                     <label>Archivo Contabilidad:</label>
+                                     <select id="select-cuit-contabilidad" class="select-mapping" title="Columna con CUIT"></select>
+                                     <select id="select-monto-contabilidad" class="select-mapping" title="Columna con Monto"></select>
+                                 </div>
+                             </div>
+                        </div>
+                        <div class="action-section"><button id="process-btn" class="btn-primary" disabled><i class="fa-solid fa-cogs"></i> Conciliar Archivos</button></div>
+                    </div>
+                    <div id="message-box" class="message-box hidden"></div>
+                    <div id="results-section" class="card hidden animate__animated animate__fadeIn">
+                        <h3><i class="fa-solid fa-chart-pie"></i> Resultados de la Conciliación</h3>
+                        <div class="summary-cards">
+                           <div class="summary-card"><h4>Total ARCA</h4><p id="summary-arca-amount">$0.00</p><span id="summary-arca-count">0 registros</span></div>
+                           <div class="summary-card success"><h4>Conciliado</h4><p id="summary-reconciled-amount">$0.00</p><span id="summary-reconciled-count">0 registros</span></div>
+                           <div class="summary-card danger"><h4>Pendiente</h4><p id="summary-pending-amount">$0.00</p><span id="summary-pending-count">0 registros</span></div>
+                        </div>
+                        <div class="action-section" style="margin: 2rem 0;"><button id="download-report-btn" class="btn-secondary"><i class="fa-solid fa-file-excel"></i> Descargar Reporte General</button></div>
+                        <div class="results-tables">
+                            <div class="table-header">
+                                <h4><i class="fa-solid fa-triangle-exclamation" style="color: var(--danger-color);"></i> Vista Previa de Percepciones Pendientes</h4>
+                                <div class="table-config-container">
+                                    <button class="config-btn"><i class="fa-solid fa-gear"></i></button>
+                                    <div class="column-config-dropdown hidden" data-table-target="table-pending"></div>
+                                </div>
+                            </div>
+                            <div class="table-wrapper"><table id="table-pending"></table></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tool-provider-analysis" class="tool-content hidden">
+                 <div class="panel-full-width">
+                     <div id="provider-analysis-placeholder" class="card placeholder-card">
+                         <div class="placeholder">
+                            <i class="fa-solid fa-arrow-left"></i>
+                            <p>Primero, realiza una conciliación en la herramienta "Conciliador General" para poder usar esta función.</p>
+                        </div>
+                     </div>
+                     <div id="provider-analysis-content" class="card hidden">
+                        <h3><i class="fa-solid fa-user-tag"></i> Análisis por Proveedor</h3>
+                        <div class="provider-selector-container">
+                            <label for="provider-filter-input">Buscar Proveedor por CUIT:</label>
+                            <input type="text" id="provider-filter-input" class="select-mapping" placeholder="Escribe para filtrar la lista...">
+                            
+                            <label for="provider-select" style="margin-top: 1rem;">Selecciona un Proveedor de la lista:</label>
+                            <select id="provider-select" class="select-mapping"></select>
+                        </div>
+                        <div id="provider-detail-content" class="hidden">
+                            <div class="summary-cards" style="margin-top: 2rem; margin-bottom: 2rem;">
+                               <div class="summary-card"><h4>Total Percibido (ARCA)</h4><p id="provider-summary-arca">$0.00</p></div>
+                               <div class="summary-card success"><h4>Total Contabilizado</h4><p id="provider-summary-contabilidad">$0.00</p></div>
+                               <div class="summary-card danger"><h4>Diferencia</h4><p id="provider-summary-diferencia">$0.00</p></div>
+                            </div>
+                            
+                            <div class="action-section" style="margin: 2rem 0;"><button id="download-provider-report-btn" class="btn-secondary"><i class="fa-solid fa-download"></i> Descargar Reporte del Proveedor</button></div>
+                            <div class="results-tables">
+                                <div class="table-header">
+                                    <h4><i class="fa-solid fa-triangle-exclamation" style="color: var(--danger-color);"></i> Percepciones de ARCA Pendientes</h4>
+                                    <div class="table-config-container">
+                                        <button class="config-btn"><i class="fa-solid fa-gear"></i></button>
+                                        <div class="column-config-dropdown hidden" data-table-target="table-provider-pending"></div>
+                                    </div>
+                                </div>
+                                <div class="table-wrapper"><table id="table-provider-pending"></table></div>
+                                
+                                <div class="table-header" style="margin-top: 2rem;">
+                                    <h4><i class="fa-solid fa-check-circle" style="color: var(--success-color);"></i> Percepciones Conciliadas</h4>
+                                    <div class="table-config-container">
+                                        <button class="config-btn"><i class="fa-solid fa-gear"></i></button>
+                                        <div class="column-config-dropdown hidden" data-table-target="table-provider-reconciled"></div>
+                                    </div>
+                                </div>
+                                <div class="table-wrapper"><table id="table-provider-reconciled"></table></div>
+                                
+                                <div class="table-header" style="margin-top: 2rem;">
+                                    <h4><i class="fa-solid fa-book" style="color: var(--primary-color);"></i> Registros de Contabilidad Sin Contraparte en ARCA</h4>
+                                    <div class="table-config-container">
+                                        <button class="config-btn"><i class="fa-solid fa-gear"></i></button>
+                                        <div class="column-config-dropdown hidden" data-table-target="table-provider-unmatched-contabilidad"></div>
+                                    </div>
+                                </div>
+                                <div class="table-wrapper"><table id="table-provider-unmatched-contabilidad"></table></div>
+                            </div>
+                        </div>
+                     </div>
+                 </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<div id="manual-reconciliation-panel" class="reconciliation-panel hidden">
+    <div id="reconciliation-mode-view" class="panel-section hidden">
+        <div class="totals">
+            <span>ARCA: <strong id="selected-arca-total">$0.00</strong></span>
+            <span>Contab.: <strong id="selected-cont-total">$0.00</strong></span>
+            <span class="net">Neto: <strong id="selected-net-total">$0.00</strong></span>
+        </div>
+        <button id="reconcile-manual-btn" class="btn-primary" disabled>Conciliar Selección</button>
+    </div>
+    <div id="dereconciliation-mode-view" class="panel-section hidden">
+        <span><strong id="selected-reconciled-count">0</strong> registro(s) conciliado(s) seleccionado(s)</span>
+        <button id="de-reconcile-manual-btn" class="btn-danger">Desconciliar Selección</button>
+    </div>
+</div>
+
+<style id="column-styles"></style>
+<script src="script.js"></script>
+</body>
+</html>
+<script  src="./script.js"></script>
+
+</body>
+</html>
+<!-- partial -->
+  <script  src="./script.js"></script>
+
+</body>
+</html>
